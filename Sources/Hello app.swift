@@ -18,7 +18,7 @@ struct RainDrop: View {
     @State private var fallen = false
 
     var body: some View {
-        Image(uiImage: UIImage(named: drop.image) ?? UIImage())
+        Image(uiImage: UIImage(named: drop.image + ".jpg") ?? UIImage())
             .resizable()
             .scaledToFit()
             .frame(width: drop.size, height: drop.size)
@@ -37,4 +37,4 @@ struct RainDrop: View {
 }
 
 struct ContentView: View {
-    @State private var drops: [Drop] = (0..
+    @State private var dr
