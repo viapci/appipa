@@ -1,32 +1,8 @@
 import SwiftUI
 
-struct RainDrop: View {
-    let drop: Drop
-    let width: CGFloat
-    let height: CGFloat
-    @State private var fallen = false
-
-    var body: some View {
-        Image(uiImage: loadRainImage(drop.image))
-            .resizable()
-            .scaledToFit()
-            .frame(width: drop.size, height: drop.size)
-            .rotationEffect(.degrees(fallen ? drop.angle + drop.spin : drop.angle))
-            .position(x: drop.x * width, y: fallen ? height + 400 : -400)
-            .onAppear {
-                withAnimation(
-                    Animation.linear(duration: drop.duration)
-                        .delay(drop.delay)
-                        .repeatForever(autoreverses: false)
-                ) {
-                    fallen = true
-                }
-            }
-    }
-}
-
 struct ContentView: View {
-    @State private var drops: [Drop] = makeDrops()
+    @StateObject private var world = World()
+    private let timer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         GeometryReader { geo in
@@ -34,8 +10,13 @@ struct ContentView: View {
                 Color(.systemBackground)
                     .ignoresSafeArea()
 
-                ForEach(drops) { drop in
-                    RainDrop(drop: drop, width: geo.size.width, height: geo.size.height)
+                ForEach(world.drops) { d in
+                    Image(uiImage: d.picture)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: d.size, height: d.size)
+                        .rotationEffect(.degrees(d.angle))
+                        .position(x: d.x, y: d.y)
                 }
 
                 Text("otis woz here <3")
@@ -43,6 +24,19 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
                     .padding()
                     .shadow(radius: 6)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                world.add(in: geo.size, atCenter: false)
+            }
+            .onAppear {
+                if world.drops.isEmpty {
+                    world.add(in: geo.size, atCenter: true)
+                }
+            }
+            .onReceive(timer) { _ in
+                world.step(in: geo.size)
             }
         }
     }
