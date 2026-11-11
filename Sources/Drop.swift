@@ -70,4 +70,25 @@ final class World: ObservableObject {
             d.x += d.vx
             d.y += d.vy
             let r = d.size / 2
-            if d.x 
+            if d.x < r {
+                d.x = r
+                d.vx = -d.vx * 0.5
+            }
+            if d.x > size.width - r {
+                d.x = size.width - r
+                d.vx = -d.vx * 0.5
+            }
+            if d.y < r {
+                d.y = r
+                d.vy = -d.vy * 0.5
+            }
+            if d.y > size.height - r {
+                d.y = size.height - r
+                d.vy = -d.vy * 0.5
+            }
+            d.angle += Double(d.vx) * 0.6
+            list[i] = d
+        }
+        drops = list
+    }
+}
