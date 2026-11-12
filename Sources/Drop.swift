@@ -24,7 +24,10 @@ func loadRainImage(_ name: String) -> UIImage {
 final class World: ObservableObject {
     @Published var drops: [Drop] = []
     private let motion = CMMotionManager()
-    private let names = ["rain1", "rain2", "rain3"]
+    private let pictures: [UIImage] = ["rain1", "rain2", "rain3"].map { loadRainImage($0) }
+
+    // No limit. Lower this number if you ever want a cap.
+    private let maxDrops = Int.max
 
     init() {
         if motion.isDeviceMotionAvailable {
@@ -34,20 +37,15 @@ final class World: ObservableObject {
     }
 
     func add(in size: CGSize, atCenter: Bool) {
+        // Taps call this with atCenter false, so they do nothing.
+        if !atCenter { return }
         if size.width <= 0 || size.height <= 0 { return }
-        if drops.count >= 60 { return }
+        if !drops.isEmpty { return }
         let s = CGFloat.random(in: 80...160)
-        let name = names[Int.random(in: 0..<names.count)]
-        var px = size.width / 2
-        var py = size.height / 2
-        if !atCenter {
-            px = CGFloat.random(in: s...max(s, size.width - s))
-            py = CGFloat.random(in: s...max(s, size.height - s))
-        }
         let drop = Drop(
-            picture: loadRainImage(name),
-            x: px,
-            y: py,
+            picture: pictures[Int.random(in: 0..<pictures.count)],
+            x: size.width / 2,
+            y: size.height / 2,
             angle: Double.random(in: 0...360),
             size: s
         )
@@ -68,6 +66,8 @@ final class World: ObservableObject {
         let boost: CGFloat = 1.2
 
         var list = drops
+        var born: [Drop] = []
+
         for i in list.indices {
             var d = list[i]
             d.vx = (d.vx + gx * 0.4) * 0.995
@@ -107,10 +107,24 @@ final class World: ObservableObject {
 
             if hit {
                 d.angle += Double.random(in: -40...40)
+                if list.count + born.count < maxDrops {
+                    var baby = Drop(
+                        picture: pictures[Int.random(in: 0..<pictures.count)],
+                        x: d.x,
+                        y: d.y,
+                        angle: Double.random(in: 0...360),
+                        size: CGFloat.random(in: 80...160)
+                    )
+                    baby.vx = CGFloat.random(in: -12...12)
+                    baby.vy = CGFloat.random(in: -12...12)
+                    born.append(baby)
+                }
             }
             d.angle += Double(d.vx) * 0.6
             list[i] = d
         }
+
+        list.append(contentsOf: born)
         drops = list
     }
 }
