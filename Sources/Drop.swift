@@ -62,29 +62,51 @@ final class World: ObservableObject {
             gx = CGFloat(g.x)
             gy = CGFloat(-g.y)
         }
+
+        let maxSpeed: CGFloat = 28
+        let minKick: CGFloat = 10
+        let boost: CGFloat = 1.2
+
         var list = drops
         for i in list.indices {
             var d = list[i]
-            d.vx = (d.vx + gx * 0.25) * 0.97
-            d.vy = (d.vy + gy * 0.25) * 0.97
+            d.vx = (d.vx + gx * 0.4) * 0.995
+            d.vy = (d.vy + gy * 0.4) * 0.995
+
+            if d.vx > maxSpeed { d.vx = maxSpeed }
+            if d.vx < -maxSpeed { d.vx = -maxSpeed }
+            if d.vy > maxSpeed { d.vy = maxSpeed }
+            if d.vy < -maxSpeed { d.vy = -maxSpeed }
+
             d.x += d.vx
             d.y += d.vy
+
             let r = d.size / 2
+            var hit = false
+
             if d.x < r {
                 d.x = r
-                d.vx = -d.vx * 0.5
+                d.vx = max(abs(d.vx) * boost, minKick)
+                hit = true
             }
             if d.x > size.width - r {
                 d.x = size.width - r
-                d.vx = -d.vx * 0.5
+                d.vx = -max(abs(d.vx) * boost, minKick)
+                hit = true
             }
             if d.y < r {
                 d.y = r
-                d.vy = -d.vy * 0.5
+                d.vy = max(abs(d.vy) * boost, minKick)
+                hit = true
             }
             if d.y > size.height - r {
                 d.y = size.height - r
-                d.vy = -d.vy * 0.5
+                d.vy = -max(abs(d.vy) * boost, minKick)
+                hit = true
+            }
+
+            if hit {
+                d.angle += Double.random(in: -40...40)
             }
             d.angle += Double(d.vx) * 0.6
             list[i] = d
